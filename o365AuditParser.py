@@ -23,6 +23,56 @@ from collections import defaultdict
 VERSION = '1.0'
 NAME = 'o365 Audit Log Extractor'
 
+def process_file(inFile, results, fieldNames):
+    counter = 0
+    # loop through input file
+    dictReader = csv.DictReader(inFile)
+    for line in dictReader:
+        try:
+            # transform auditData to dictionary
+            record = json.loads(line['AuditData'])
+            
+            # remove random linebreaks in field values
+            # its a feature, not a bug
+            for field in record:
+                if isinstance(record[field], str):
+                    record[field] = record[field].strip()
+            
+            # get list of fields in auditData
+            recordFields = list(record.keys())
+            
+            # events of the same Workload can have different fields
+            # create a union to ensure fields not seen yet are included in final output
+            fieldNames[record['Workload']] = set().union(recordFields, fieldNames[record['Workload']])
+
+            # add record to results and update record count
+            results[record['Workload']].append(record)
+            counter += 1
+        
+        except Exception as e:
+            logger.error('unable to parse line {0} in file {1}'.format(counter, entry))
+            logger.error('error message: {}'.format(e.message))
+    
+
+    # log record count per workload
+    logger.info('Processing complete, {} records found'.format(counter))
+    
+    return results, fieldNames
+
+def process_files(filesToProcess, results, fieldNames):
+    for entry in filesToProcess:
+        try:
+            logger.info('Processing file: {}'.format(entry))
+            with open(entry, 'r', encoding='latin-1') as inFile:
+                results, fieldNames = process_file(inFile, results, fieldNames)
+                
+
+        except Exception as e:
+            logger.error('error processing file: {}'.format(entry))
+            logger.error('error message: {}'.format(e.message)) 
+    
+    return(results, fieldNames)
+    
 
 if __name__=='__main__':
 
@@ -182,47 +232,3 @@ if __name__=='__main__':
 
     logger.info('Export complete, terminating')
 
-
-def process_files(filesToProcess, results, fieldNames):
-        for entry in filesToProcess:
-            try:
-                logger.info('Processing file: {}'.format(entry))
-                with open(entry, 'r', encoding='latin-1') as inFile:
-                    counter = 0
-                    # loop through input file
-                    dictReader = csv.DictReader(inFile)
-                    for line in dictReader:
-                        try:
-                            # transform auditData to dictionary
-                            record = json.loads(line['AuditData'])
-                            
-                            # remove random linebreaks in field values
-                            # its a feature, not a bug
-                            for field in record:
-                                if isinstance(record[field], str):
-                                    record[field] = record[field].strip()
-                            
-                            # get list of fields in auditData
-                            recordFields = list(record.keys())
-                            
-                            # events of the same Workload can have different fields
-                            # create a union to ensure fields not seen yet are included in final output
-                            fieldNames[record['Workload']] = set().union(recordFields, fieldNames[record['Workload']])
-
-                            # add record to results and update record count
-                            results[record['Workload']].append(record)
-                            counter += 1
-                        
-                        except Exception as e:
-                            logger.error('unable to parse line {0} in file {1}'.format(counter, entry))
-                            logger.error('error message: {}'.format(e.message))
-                
-                # log record count per workload
-                logger.info('Processing complete, {} records found'.format(counter))
-
-            except Exception as e:
-                logger.error('error processing file: {}'.format(entry))
-                logger.error('error message: {}'.format(e.message)) 
-        
-        return(results, fieldNames)
-        
