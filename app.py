@@ -53,7 +53,11 @@ def process_file():
     # Get the file from the POST request
     file = request.files['file']
 
-    file_data = StringIO(file.read())
+    # convert werkzeug FileStorage to StringIO
+    file_data = StringIO()
+    file.save(file_data)
+    file.close()
+    file_data.seek(0)
 
     #dicts to hold record field names and parsed results
     fieldNames = defaultdict(set)
