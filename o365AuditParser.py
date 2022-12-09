@@ -19,11 +19,12 @@ import logging
 import pathlib
 import sys
 from collections import defaultdict
+import io
 
 VERSION = '1.0'
 NAME = 'o365 Audit Log Extractor'
 
-def process_file(inFile, results, fieldNames):
+def process_file(inFile, results, fieldNames, entry=None):
     counter = 0
     # loop through input file
     dictReader = csv.DictReader(inFile)
@@ -64,7 +65,7 @@ def process_files(filesToProcess, results, fieldNames):
         try:
             logger.info('Processing file: {}'.format(entry))
             with open(entry, 'r', encoding='latin-1') as inFile:
-                results, fieldNames = process_file(inFile, results, fieldNames)
+                results, fieldNames = process_file(inFile, results, fieldNames, entry=entry)
                 
 
         except Exception as e:
@@ -73,6 +74,67 @@ def process_files(filesToProcess, results, fieldNames):
     
     return(results, fieldNames)
     
+def combined_csv(results, fieldNames, args):
+    # combine field names into one list
+    combinedFieldNames = set()
+    for workload in fieldNames:
+        combinedFieldNames = set().union(combinedFieldNames, fieldNames[workload])
+
+    # generate output path and open file
+    fileName = '{}-combinedRecords.csv'.format(args.prefix)
+    output_obj = pathlib.Path(args.output.resolve(), fileName)
+    logger.debug('Path: {}'.format(output_obj))
+    with open(output_obj, 'w') as outFile:
+    
+        # create dictionary writer and write headers
+        dictWriter=csv.DictWriter(outFile, fieldnames=combinedFieldNames, lineterminator='\n')
+        dictWriter.writeheader()
+
+        for workload in results:
+            logger.info('Sorting and exporting {0} {1} records to CSV file'.format(len(results[workload]), workload))
+            # sort records based on timestamp in CreationTime field
+            results[workload] = sorted(results[workload], key=lambda t: t['CreationTime'])
+            # write results to file
+            dictWriter.writerows(results[workload])
+
+def workload_csv(results, fieldNames, args):
+    for workload in results:
+        logger.info('Sorting and exporting {0} {1} records to CSV file'.format(len(results[workload]), workload))
+        
+        # sort records based on timestamp in CreationTime field
+        results[workload] = sorted(results[workload], key=lambda t: t['CreationTime'])
+        
+        # write to file
+        fileName = '{0}-{1}.csv'.format(args.prefix, workload)
+        output_obj = pathlib.Path(args.output.resolve(), fileName)
+        with open(output_obj, 'w') as outFile:
+            logger.debug('Path: {}'.format(output_obj))
+            dictWriter=csv.DictWriter(outFile, fieldnames=fieldNames[workload], lineterminator='\n')
+            dictWriter.writeheader()
+            dictWriter.writerows(results[workload])
+
+def workload_csv_stringio(results,fieldNames):
+    # return a dict of StringIO's that contain CSV's
+    # the key name corresponds to the filename
+    outfiles = {}
+    for workload in results:
+        logger.info('Sorting and exporting {0} {1} records to CSV file'.format(len(results[workload]), workload))
+        
+        # sort records based on timestamp in CreationTime field
+        results[workload] = sorted(results[workload], key=lambda t: t['CreationTime'])
+        
+        # write to file
+        fileName = '{0}-{1}.csv'.format("o365AuditParser", workload)
+        outFile = io.StringIO()
+
+        dictWriter=csv.DictWriter(outFile, fieldnames=fieldNames[workload], lineterminator='\n')
+        dictWriter.writeheader()
+        dictWriter.writerows(results[workload])
+
+        outfiles['fileName'] = outFile
+    
+    return outfiles
+
 
 if __name__=='__main__':
 
@@ -160,27 +222,7 @@ if __name__=='__main__':
         if args.combined:
             
             if args.format == 'csv':
-                # combine field names into one list
-                combinedFieldNames = set()
-                for workload in fieldNames:
-                    combinedFieldNames = set().union(combinedFieldNames, fieldNames[workload])
-
-                # generate output path and open file
-                fileName = '{}-combinedRecords.csv'.format(args.prefix)
-                output_obj = pathlib.Path(args.output.resolve(), fileName)
-                logger.debug('Path: {}'.format(output_obj))
-                with open(output_obj, 'w') as outFile:
-                
-                    # create dictionary writer and write headers
-                    dictWriter=csv.DictWriter(outFile, fieldnames=combinedFieldNames, lineterminator='\n')
-                    dictWriter.writeheader()
-
-                    for workload in results:
-                        logger.info('Sorting and exporting {0} {1} records to CSV file'.format(len(results[workload]), workload))
-                        # sort records based on timestamp in CreationTime field
-                        results[workload] = sorted(results[workload], key=lambda t: t['CreationTime'])
-                        # write results to file
-                        dictWriter.writerows(results[workload])
+                combined_csv(results, fieldNames, args)
             
             if args.format == 'json':
                 logger.info('Exporting records to JSON file')
@@ -201,20 +243,7 @@ if __name__=='__main__':
         if args.workload:
 
             if args.format == 'csv':
-                for workload in results:
-                    logger.info('Sorting and exporting {0} {1} records to CSV file'.format(len(results[workload]), workload))
-                    
-                    # sort records based on timestamp in CreationTime field
-                    results[workload] = sorted(results[workload], key=lambda t: t['CreationTime'])
-                    
-                    # write to file
-                    fileName = '{0}-{1}.csv'.format(args.prefix, workload)
-                    output_obj = pathlib.Path(args.output.resolve(), fileName)
-                    with open(output_obj, 'w') as outFile:
-                        logger.debug('Path: {}'.format(output_obj))
-                        dictWriter=csv.DictWriter(outFile, fieldnames=fieldNames[workload], lineterminator='\n')
-                        dictWriter.writeheader()
-                        dictWriter.writerows(results[workload])
+                workload_csv(results, fieldNames, args)
             
             if args.format == 'json':
                 for workload in results:
