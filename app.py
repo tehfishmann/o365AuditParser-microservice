@@ -53,12 +53,13 @@ def process_file():
     # Get the file from the POST request
     file = request.files['file']
 
-    # Do something with the file here
+    file_data = StringIO(file.read())
+
     #dicts to hold record field names and parsed results
     fieldNames = defaultdict(set)
     results = defaultdict(list)
 
-    results, fieldNames = o365AuditParser.process_file(file, results, fieldNames)
+    results, fieldNames = o365AuditParser.process_file(file_data, results, fieldNames)
 
     csv_dict = o365AuditParser.workload_csv_stringio(results, fieldNames)
 
@@ -67,7 +68,7 @@ def process_file():
 
     # Send the file to the user with the appropriate headers
     return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
-    
+
 def create_zipfile(file_dict):
     # returns an IO object containing a .zip file.
     # the contents of the .zip are the input dictionary
