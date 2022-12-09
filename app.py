@@ -15,7 +15,11 @@
 import signal
 import sys
 from types import FrameType
-from io import BytesIO
+from io import BytesIO, StringIO
+import zipfile
+from collections import defaultdict
+
+from o365AuditParser import process_file, workload_csv_stringio
 
 from flask import Flask, send_file, request
 
@@ -50,7 +54,9 @@ def process_file():
     file = request.files['file']
 
     # Do something with the file here
-    # ...
+    #dicts to hold record field names and parsed results
+    fieldNames = defaultdict(set)
+    results = defaultdict(list)
 
     # Generate the file data dynamically
     file_data = b'This is the file data'
@@ -60,6 +66,17 @@ def process_file():
 
     # Send the file to the user with the appropriate headers
     return send_file(file_stream, mimetype='text/plain', attachment_filename='file.txt')
+
+@app.route('/download_files')
+def download_files():
+    # Create a zipfile containing the multiple files
+    zip_file = BytesIO()
+    with zipfile.ZipFile(zip_file, mode='w') as zf:
+        zf.writestr('file1.txt', b'This is the first file')
+        zf.writestr('file2.txt', b'This is the second file')
+
+    # Send the zipfile to the user with the appropriate headers
+    return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
 
 
 def shutdown_handler(signal_int: int, frame: FrameType) -> None:
