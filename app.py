@@ -54,8 +54,7 @@ def process_file():
     file = request.files['file']
 
     # convert werkzeug FileStorage to StringIO
-    file_data = BytesIO()
-    file.save(dst=file_data)
+    file_data = BytesIO(file.read())
     file.close()
     file_data.seek(0)
 
