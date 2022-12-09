@@ -55,7 +55,7 @@ def process_file():
 
     # convert werkzeug FileStorage to StringIO
     file_data = StringIO()
-    file.save(file_data)
+    file.save(dst=file_data)
     file.close()
     file_data.seek(0)
 
