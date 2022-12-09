@@ -72,15 +72,18 @@ def process_file():
     # Send the file to the user with the appropriate headers
     return send_file(file_stream, mimetype='text/plain', attachment_filename='file.txt')
 
-def create_zipfile():
+def create_zipfile(file_dict):
+    # returns an IO object containing a .zip file.
+    # the contents of the .zip are the input dictionary
+    # dictionary keys are understood to be filenames, dictionary values are expected to be 
+    # file contents
     # Create a zipfile containing the multiple files
-    zip_file = BytesIO()
-    with zipfile.ZipFile(zip_file, mode='w') as zf:
-        zf.writestr('file1.txt', b'This is the first file')
-        zf.writestr('file2.txt', b'This is the second file')
+    zip_file_IO = BytesIO()
+    with zipfile.ZipFile(zip_file_IO, mode='w') as zf:
+        for filename in file_dict.keys():
+            zf.writestr(filename, file_dict[filename])
 
-    # Send the zipfile to the user with the appropriate headers
-    return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
+    return zip_file_IO
 
 
 def shutdown_handler(signal_int: int, frame: FrameType) -> None:
