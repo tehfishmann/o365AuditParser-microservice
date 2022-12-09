@@ -63,15 +63,11 @@ def process_file():
     csv_dict = o365AuditParser.workload_csv_stringio(results, fieldNames)
 
 
-    # Generate the file data dynamically
-    file_data = b'This is the file data'
-
-    # Create a binary stream for the file data
-    file_stream = BytesIO(file_data)
+    zip_file = create_zipfile(csv_dict)
 
     # Send the file to the user with the appropriate headers
-    return send_file(file_stream, mimetype='text/plain', attachment_filename='file.txt')
-
+    return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
+    
 def create_zipfile(file_dict):
     # returns an IO object containing a .zip file.
     # the contents of the .zip are the input dictionary
