@@ -19,7 +19,7 @@ from io import BytesIO, StringIO
 import zipfile
 from collections import defaultdict
 
-from o365AuditParser import process_file, workload_csv_stringio
+import o365AuditParser
 
 from flask import Flask, send_file, request
 
@@ -58,6 +58,11 @@ def process_file():
     fieldNames = defaultdict(set)
     results = defaultdict(list)
 
+    results, fieldNames = o365AuditParser.process_file(file, results, fieldNames)
+
+    csv_dict = o365AuditParser.workload_csv_stringio(results, fieldNames)
+
+
     # Generate the file data dynamically
     file_data = b'This is the file data'
 
@@ -67,8 +72,7 @@ def process_file():
     # Send the file to the user with the appropriate headers
     return send_file(file_stream, mimetype='text/plain', attachment_filename='file.txt')
 
-@app.route('/download_files')
-def download_files():
+def create_zipfile():
     # Create a zipfile containing the multiple files
     zip_file = BytesIO()
     with zipfile.ZipFile(zip_file, mode='w') as zf:
