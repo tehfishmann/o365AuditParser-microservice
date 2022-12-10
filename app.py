@@ -67,6 +67,7 @@ def process_file():
 
 
     zip_file = create_zipfile(csv_dict)
+    logger.info("created zip file with type {}".format(type(zip_file)))
 
     # Send the file to the user with the appropriate headers
     return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
