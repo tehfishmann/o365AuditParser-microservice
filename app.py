@@ -43,10 +43,19 @@ def hello() -> str:
 @app.route('/')
 def show_form():
     return '''
-        <form action="/process_file" method="post" enctype="multipart/form-data">
+    <!doctype html>
+    <html>
+    <head>
+    <title>o365 Audit Parser</title>
+    </head>
+    <body>
+    <h1>Upload an O365 Protection Center Audit Log file</h1>
+    <form action="/process_file" method="post" enctype="multipart/form-data">
           <input type="file" name="file">
           <input type="submit" value="Upload">
-        </form>
+    </form>
+    </body>
+    </html>
     '''
 
 @app.route('/process_file', methods=['POST'])
