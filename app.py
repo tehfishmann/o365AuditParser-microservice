@@ -81,7 +81,6 @@ def create_zipfile(file_dict):
     with zipfile.ZipFile(zip_file_IO, mode='w') as zf:
         for filename in file_dict.keys():
             zf.writestr(filename, file_dict[filename].getvalue())
-            zf.write()
 
     return zip_file_IO
 
