@@ -135,7 +135,7 @@ def workload_csv_stringio(results,fieldNames):
         dictWriter.writeheader()
         dictWriter.writerows(results[workload])
 
-        outfiles['fileName'] = outFile
+        outfiles[fileName] = outFile
     
     return outfiles
 
