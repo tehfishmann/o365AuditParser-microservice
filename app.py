@@ -22,6 +22,7 @@ from collections import defaultdict
 import o365AuditParser
 
 from flask import Flask, send_file, request
+import werkzeug
 
 
 from utils.logging import logger
@@ -67,10 +68,11 @@ def process_file():
 
 
     zip_file = create_zipfile(csv_dict)
+    zip_file_wrapped = werkzeug.wsgi.FileWrapper(zip_file)
     logger.info("created zip file with type {}".format(type(zip_file)))
 
     # Send the file to the user with the appropriate headers
-    return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
+    return send_file(zip_file_wrapped, mimetype='application/zip', attachment_filename='files.zip')
 
 def create_zipfile(file_dict):
     # returns an IO object containing a .zip file.
