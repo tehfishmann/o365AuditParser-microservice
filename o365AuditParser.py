@@ -24,6 +24,10 @@ import io
 VERSION = '1.0'
 NAME = 'o365 Audit Log Extractor'
 
+# set up basic logger for use as a module
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 def process_file(inFile, results, fieldNames, entry=None):
     counter = 0
     # loop through input file
