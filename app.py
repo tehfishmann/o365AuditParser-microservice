@@ -54,9 +54,8 @@ def process_file():
     file = request.files['file']
 
     # convert werkzeug FileStorage to StringIO
-    file_data = BytesIO(file.read())
+    file_data = StringIO(file.read().decode('utf-8'))
     file.close()
-    file_data.seek(0)
 
     #dicts to hold record field names and parsed results
     fieldNames = defaultdict(set)
