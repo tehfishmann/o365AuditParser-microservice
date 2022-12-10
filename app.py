@@ -30,7 +30,7 @@ from utils.logging import logger
 app = Flask(__name__)
 
 
-@app.route("/")
+@app.route("/oldhello")
 def hello() -> str:
     # Use basic logging with custom fields
     logger.info(logField="custom-entry", arbitraryField="custom-entry")
@@ -40,7 +40,7 @@ def hello() -> str:
 
     return "Hello, World!"
 
-@app.route('/input')
+@app.route('/')
 def show_form():
     return '''
         <form action="/process_file" method="post" enctype="multipart/form-data">
