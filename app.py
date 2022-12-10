@@ -68,11 +68,10 @@ def process_file():
 
 
     zip_file = create_zipfile(csv_dict)
-    zip_file_wrapped = werkzeug.wsgi.FileWrapper(zip_file)
-    logger.info("created zip file with type {}".format(type(zip_file)))
+    zip_file.seek(0)
 
     # Send the file to the user with the appropriate headers
-    return send_file(zip_file_wrapped, mimetype='application/zip', attachment_filename='files.zip')
+    return send_file(zip_file, mimetype='application/zip', attachment_filename='files.zip')
 
 def create_zipfile(file_dict):
     # returns an IO object containing a .zip file.
@@ -83,6 +82,7 @@ def create_zipfile(file_dict):
     zip_file_IO = BytesIO()
     with zipfile.ZipFile(zip_file_IO, mode='w') as zf:
         for filename in file_dict.keys():
+            logger.info(filename)
             zf.writestr(filename, file_dict[filename].getvalue())
 
     return zip_file_IO
